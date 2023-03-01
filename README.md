@@ -43,3 +43,21 @@ Vagrant.configure("2") do |config|
 	end
 ```
 </details>
+
+Далее доустановим утилиты nfs
+
+```
+[root@server ~]# yum install nfs-utils
+Loaded plugins: fastestmirror
+Determining fastest mirrors
+ * base: mirror.besthosting.ua
+ * extras: mirror.besthosting.ua
+ * updates: mirror.besthosting.ua
+                                                                                                                                            
+
+Updated:
+  nfs-utils.x86_64 1:1.3.0-0.68.el7.2                                                                                                                                                                       
+
+Complete!
+[root@server ~]# 
+```
