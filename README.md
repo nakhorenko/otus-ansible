@@ -36,7 +36,7 @@ Vagrant.configure("2") do |config|
 		      	end
 
 	      		box.vm.provision "shell",
-                name: "configuretion_from_shell",
+                name: "configuration_from_shell",
                 path: boxconfig[:provision]
 		    	end
 	  	end
