@@ -1,5 +1,7 @@
 Первым делом создаются 2 вирт машины. Для этого используем вагрант файл с конфигом.
-  
+<details>
+  <summary>Конфиг</summary>  
+	
 ```  
         MACHINES = {
      :server => {
@@ -40,3 +42,4 @@ Vagrant.configure("2") do |config|
 	  	end
 	end
 ```
+</details>
