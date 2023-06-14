@@ -1,7 +1,5 @@
 # otus-ansible
 
-Создал свой плейбук который будет запускать роли.
-
 Проверил настройки хоста ансиблом
 ```
 otus-ansible$ ansible nginx -m ping
@@ -30,7 +28,7 @@ ansible nginx -m yum -a "name=epel-release state=present" -b
 nginx | SUCCESS => {
 "changed": true,
 ```
-Потом запустил плейбук, он не 
+Потом запустил плейбук, он не поменял ничего. Потом снова ad-hoc на удаление пакета. А затем плейбук и пакет снова установлен.
 ```
 otus-ansible$ ansible nginx -m yum -a "name=epel-release state=absent" -b
 nginx | CHANGED => {
@@ -62,3 +60,110 @@ changed: [nginx]
 PLAY RECAP ****************************************************************************************************************************************************************
 nginx                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
 ```
+<details>
+    <summary>Далее работаем с плейбуком и после переделываем его в роли.</summary>
+
+```
+- name: NGINX | Install and configure NGINX
+  hosts: nginx
+  become: true
+
+  tasks:
+    - name: NGINX | Install EPEL Repo package from standart repo
+      yum:
+        name: epel-release
+        state: present
+      tags:
+        - epel-package
+        - packages
+
+    - name: NGINX | Install NGINX package from EPEL Repo
+      yum:
+        name: nginx
+        state: present
+      tags:
+        - nginx-package
+        - packages
+```
+    
+```
+TASK [NGINX | Install NGINX package from EPEL Repo] ***********************************************************************************************************************
+changed: [nginx]
+
+PLAY RECAP ****************************************************************************************************************************************************************
+nginx                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+Потом дорабатываю плейбук хендлерами и добавляю шаблон конфигурации nginx и запускаю плейбук
+
+```
+otus-ansible$ ansible-playbook playbooks/nginx.yml 
+
+PLAY [NGINX | Install and configure NGINX] *******************************************************************************************************************
+
+TASK [Gathering Facts] ***************************************************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Install EPEL Repo package from standart repo] **************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Install NGINX package from EPEL Repo] **********************************************************************************************************
+ok: [nginx]
+
+TASK [NGINX | Create NGINX config file from template] ********************************************************************************************************
+changed: [nginx]
+
+RUNNING HANDLER [reload nginx] *******************************************************************************************************************************
+changed: [nginx]
+
+PLAY RECAP ***************************************************************************************************************************************************
+nginx                      : ok=5    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+```
+
+По итогу разбил все по ролям и запустил
+    
+```
+otus-ansible$ ansible nginx -m yum -a "name=nginx state=absent" -b
+nginx | CHANGED => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": true,
+    "changes": {
+        "removed": [
+            "nginx"
+ansible nginx -m yum -a "name=epel-release state=absent" -b
+nginx | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/bin/python"
+    },
+    "changed": false,
+```
+    
+```
+otus-ansible$ ansible-playbook playbooks/nginx.yml 
+
+PLAY [NGINX | Install and configure NGINX] *******************************************************************************************************************
+
+TASK [Gathering Facts] ***************************************************************************************************************************************
+ok: [nginx]
+
+TASK [epel : NGINX | Install EPEL Repo package from standart repo] *******************************************************************************************
+changed: [nginx]
+
+TASK [nginx : NGINX | Install NGINX package from EPEL Repo] **************************************************************************************************
+changed: [nginx]
+
+TASK [nginx : NGINX | Create NGINX config file from template] ************************************************************************************************
+changed: [nginx]
+
+RUNNING HANDLER [nginx : restart nginx] **********************************************************************************************************************
+changed: [nginx]
+
+RUNNING HANDLER [nginx : reload nginx] ***********************************************************************************************************************
+changed: [nginx]
+
+PLAY RECAP ***************************************************************************************************************************************************
+nginx                      : ok=6    changed=5    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+```
+</details>
